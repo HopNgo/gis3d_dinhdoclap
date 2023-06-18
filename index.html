@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Bản đồ 3D - Dinh Độc Lập</title>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #back {
+        position: absolute;
+        bottom: 20px;
+      }
+
+      #back i {
+        background-image: url(app/public/img/back.svg);
+        background-repeat: no-repeat;
+        display: inline-block;
+        width: 100px;
+        height: 25px;
+        padding-left: 25px;
+        padding-top: 2px;
+        margin: 10px;
+        cursor: pointer;
+        background-size: 20px;
+      }
+    </style>
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/icon" href="~/images/shortcut.svg" />
+    <!-- Font Awesome -->
+    <link
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"
+      rel="stylesheet"
+    />
+    <link href="~/css/font-awesome.min.css" />
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="~/css/bootstrap.min.css" />
+    <!-- Slick slider -->
+    <link href="~/css/slick.css" rel="stylesheet" />
+    <!-- Theme color -->
+    <link
+      id="switcher"
+      href="~/css/theme-color/default-theme.css"
+      rel="stylesheet"
+    />
+    <!-- Main Style -->
+    <link href="~/css/style.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <!-- Fonts -->
+    <!-- Open Sans for body font -->
+    <link
+      href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,400i,600,700,800"
+      rel="stylesheet"
+    />
+    <!-- Montserrat for title -->
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.16/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.16/"></script>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/SceneView",
+        "esri/layers/GeoJSONLayer",
+        "esri/layers/SceneLayer",
+        "esri/layers/GraphicsLayer",
+        "esri/Graphic",
+        "esri/request",
+      ], function (
+        Map,
+        SceneView,
+        GeoJSONLayer,
+        SceneLayer,
+        GraphicsLayer,
+        Graphic,
+        esriRequest
+      ) {
+        var createGraphic = function (data) {
+          return new Graphic({
+            geometry: data,
+            symbol: data.symbol,
+            attributes: data,
+            popupTemplate: data.popupTemplate,
+          });
+        };
+
+        //Nền
+        const floorLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=1"
+          url: "1-Nen.geojson",
+        });
+
+        floorLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 3.6,
+                material: {
+                  color: "rgb(139, 115, 85)",
+                },
+              },
+            ],
+          },
+        };
+
+        //Bậc thang mặt trước
+        const stairLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=2"
+          url: "2-Bac thang.geojson",
+        });
+
+        stairLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.2,
+                material: {
+                  color: "rgb(200,200,200)",
+                },
+              },
+            ],
+          },
+        };
+
+        const groundFloorLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=3"
+          url: "3-Nen tang tret.geojson",
+        });
+        groundFloorLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.05,
+                material: {
+                  color: "rgb(222,222,222)",
+                },
+              },
+            ],
+          },
+        };
+        const groundFloorWallLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=4"
+          url: "4-Tuong tang tret.geojson",
+        });
+        groundFloorWallLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 5.5,
+                material: {
+                  color: "rgb(156 , 156 ,156)",
+                },
+              },
+            ],
+          },
+        };
+        const floorBorderLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=5"
+          url: "5-Vien tang tret.geojson",
+        });
+        floorBorderLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.2,
+                material: {
+                  color: "rgb(156  , 156  ,156 )",
+                },
+              },
+            ],
+          },
+        };
+        const banisterLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=6"
+          url: "6-Lan can.geojson",
+        });
+        banisterLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.5,
+                material: {
+                  color: "rgb(205 , 186 ,150)",
+                },
+              },
+            ],
+          },
+        };
+
+        const thinColumnLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=7"
+          url: "7-Cot thanh.geojson",
+        });
+        thinColumnLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 17,
+                material: {
+                  color: "rgb(130 ,130 ,130)",
+                },
+              },
+            ],
+          },
+        };
+        const thickColumnLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=8"
+          url: "8-Cot day.geojson",
+        });
+        thickColumnLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 4.5,
+                material: {
+                  color: "rgb(105,105,105)",
+                },
+              },
+            ],
+          },
+        };
+        const doorLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=9"
+          url: "9-Cua.geojson",
+        });
+        doorLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 4,
+                material: {
+                  color: [75, 75, 75, 0.9],
+                },
+              },
+            ],
+          },
+        };
+        const secondFloorLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=10"
+          url: "10-Nen tang hai.geojson",
+        });
+        secondFloorLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 9,
+                material: {
+                  color: "rgb(156 ,156 ,156 )",
+                },
+              },
+            ],
+          },
+        };
+        const groundFloorBorderLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=11"
+          url: "11-Vien tret.geojson",
+        });
+        groundFloorBorderLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.5,
+                material: {
+                  color: "rgb(156 ,156 ,156 )",
+                },
+              },
+            ],
+          },
+        };
+        const canopyLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=12"
+          url: "12-Mai hien.geojson",
+        });
+        canopyLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.5,
+                material: {
+                  color: "rgb(170,170,170)",
+                },
+              },
+            ],
+          },
+        };
+        const balconyLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=13"
+          url: "13-Them ban cong mat truoc.geojson",
+        });
+        balconyLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.5,
+                material: {
+                  color: "rgb(170,170,170)",
+                },
+              },
+            ],
+          },
+        };
+        banisterOfBalconyLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=14"
+          url: "14-Lan can ban cong mat truoc.geojson",
+        });
+        banisterOfBalconyLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.8,
+                material: {
+                  color: "rgb(170  , 170  ,170)",
+                },
+              },
+            ],
+          },
+        };
+        thinColSecondFloorLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=15"
+          url: "15-Cot thanh tang 2.geojson",
+        });
+        thinColSecondFloorLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 12.35,
+                material: {
+                  color: "rgb(130 ,130 ,130 )",
+                },
+              },
+            ],
+          },
+        };
+        windowGroundFloorLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=16"
+          url: "16-Cua so tang tret.geojson",
+        });
+        windowGroundFloorLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 3.5,
+                material: {
+                  color: [75, 75, 75, 0.9],
+                },
+                edges: {
+                  type: "solid",
+                  color: [177, 177, 153],
+                  size: 2,
+                },
+              },
+            ],
+          },
+        };
+        windowCoverLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=17"
+          url: "17-Thanh chan cua so.geojson",
+        });
+        windowCoverLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 1,
+                material: {
+                  color: "rgb(139, 115, 85)",
+                },
+              },
+            ],
+          },
+        };
+        windowGlassAboveLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=18"
+          url: "18-Phan kinh ben tren.geojson",
+        });
+        windowGlassAboveLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 2,
+                material: {
+                  color: [75, 75, 75, 0.9],
+                },
+              },
+            ],
+          },
+        };
+        windowGlassBelowLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=19"
+          url: "19-Phan kinh ben duoi.geojson",
+        });
+        windowGlassBelowLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 4,
+                material: {
+                  color: [75, 75, 75, 0.9],
+                },
+              },
+            ],
+          },
+        };
+        windowBasementLayer = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=20"
+          url: "20-Cua so tang ham.geojson",
+        });
+        windowBasementLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 2,
+                material: {
+                  color: [75, 75, 75, 0.9],
+                },
+                edges: {
+                  type: "solid",
+                  color: [177, 177, 153],
+                  size: 2,
+                },
+              },
+            ],
+          },
+        };
+        atticLayer = new GeoJSONLayer({
+          // thanh ngang gac
+          //url: "https://localhost:44332/api/getcoordinates?id=21"
+          url: "21-Thanh ngang gac.geojson",
+        });
+        atticLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.5,
+                material: {
+                  color: "rgb(156  , 156  ,156 )",
+                },
+              },
+            ],
+          },
+        };
+        atticGlassLayer = new GeoJSONLayer({
+          // kinh gac
+          //url: "https://localhost:44332/api/getcoordinates?id=22"
+          url: "22-Kinh gac.geojson",
+        });
+        atticGlassLayer.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 1.5,
+                material: {
+                  color: [79, 79, 79, 0.9],
+                },
+              },
+            ],
+          },
+        };
+        frontTerrace = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=23"
+          url: "23-Nen san thuong nua truoc.geojson",
+        });
+        frontTerrace.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.55,
+                material: {
+                  color: "rgb(170  , 170  ,170 )",
+                },
+              },
+            ],
+          },
+        };
+        groundFrontTerrace = new GeoJSONLayer({
+          //url: "https://localhost:44332/api/getcoordinates?id=24"
+          url: "24-Vien nen san thuong nua truoc.geojson",
+        });
+        groundFrontTerrace.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.5,
+                material: {
+                  color: "rgb(156  , 156  ,156)",
+                },
+              },
+            ],
+          },
+        };
+        terrace1 = new GeoJSONLayer({
+          // san thuong 1
+          //url: "https://localhost:44332/api/getcoordinates?id=25"
+          url: "25-San thuong 1.geojson",
+        });
+        terrace1.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 1,
+                material: {
+                  color: "rgb(156  , 156  ,156)",
+                },
+              },
+            ],
+          },
+        };
+        groundTerrace1 = new GeoJSONLayer({
+          // vien san thuong 1
+          //url: "https://localhost:44332/api/getcoordinates?id=26"
+          url: "26-Vien san thuong 1.geojson",
+        });
+        groundTerrace1.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.15,
+                material: {
+                  color: "rgb(177,177,177)",
+                },
+              },
+            ],
+          },
+        };
+        groundBalconyTerrace = new GeoJSONLayer({
+          // lan can san thuong nua tren
+          //url: "https://localhost:44332/api/getcoordinates?id=27"
+          url: "27-Lan can san thuong nua tren.geojson",
+        });
+        groundBalconyTerrace.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.7,
+                material: {
+                  color: "rgb(140  , 140  ,140)",
+                },
+              },
+            ],
+          },
+        };
+
+        rooftopAttic = new GeoJSONLayer({
+          // mai gac san thuong
+          //url: "https://localhost:44332/api/getcoordinates?id=28"
+          url: "28-Mai gac san thuong.geojson",
+        });
+        rooftopAttic.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.5,
+                material: {
+                  color: "rgb(170,170,170)",
+                },
+              },
+            ],
+          },
+        };
+        terraceGuard = new GeoJSONLayer({
+          // gac san thuong
+          //url: "https://localhost:44332/api/getcoordinates?id=29"
+          url: "29-Gac san thuong.geojson",
+        });
+        terraceGuard.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 2,
+                material: {
+                  color: "rgb(130,130,130)",
+                },
+              },
+            ],
+          },
+        };
+        middleTerraceRoof = new GeoJSONLayer({
+          // mai gac san thuong giua
+          //url: "https://localhost:44332/api/getcoordinates?id=30"
+          url: "30-Mai gac san thuong giua.geojson",
+        });
+        middleTerraceRoof.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.75,
+                material: {
+                  color: "rgb(150,150,150)",
+                },
+              },
+            ],
+          },
+        };
+
+        kinhgacsanthuong = new GeoJSONLayer({
+          // kinh gac san thuong trai phai
+          //url: "https://localhost:44332/api/getcoordinates?id=31"
+          url: "31-Knh gac san thuong.geojson",
+        });
+        kinhgacsanthuong.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 2,
+                material: {
+                  color: [75, 75, 75, 0.9],
+                },
+              },
+            ],
+          },
+        };
+
+        cotgacsanthuong = new GeoJSONLayer({
+          // cot gac san thuong trai phai
+          //url: "https://localhost:44332/api/getcoordinates?id=32"
+          url: "32-Cot gac san thuong.geojson",
+        });
+        cotgacsanthuong.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 2,
+                material: {
+                  color: [75, 75, 75, 0.9],
+                },
+              },
+            ],
+          },
+        };
+        terrace2 = new GeoJSONLayer({
+          // san thuong 2
+          //url: "https://localhost:44332/api/getcoordinates?id=33"
+          url: "33-San thuong 2.geojson",
+        });
+        terrace2.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.1,
+                material: {
+                  color: [255, 255, 153],
+                },
+              },
+            ],
+          },
+        };
+        lancansanthuongsau = new GeoJSONLayer({
+          // lan can san thuong sau
+          //url: "https://localhost:44332/api/getcoordinates?id=34"
+          url: "34-Lan can san thuong sau.geojson",
+        });
+        lancansanthuongsau.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.7,
+                material: {
+                  color: "rgb(140,140,140)",
+                },
+              },
+            ],
+          },
+        };
+        viensanthuongnuasau = new GeoJSONLayer({
+          // vien san thuong nua sau
+          //url: "https://localhost:44332/api/getcoordinates?id=35"
+          url: "35-Vien san thuong sau.geojson",
+        });
+        viensanthuongnuasau.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.5,
+                material: {
+                  color: "rgb(177,177,177)",
+                },
+              },
+            ],
+          },
+        };
+        gacsanthuongsau = new GeoJSONLayer({
+          // gac santhuong sau
+          //url: "https://localhost:44332/api/getcoordinates?id=36"
+          url: "36-Gac san thuong sau.geojson",
+        });
+        gacsanthuongsau.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 2.5,
+                material: {
+                  color: "rgb(140,140,140)",
+                },
+              },
+            ],
+          },
+        };
+
+        maigacsanthuongsau = new GeoJSONLayer({
+          // mai gac san thuong sau
+          //url: "https://localhost:44332/api/getcoordinates?id=38"
+          url: "38-Mai gac san thuong sau.geojson",
+        });
+        maigacsanthuongsau.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.5,
+                material: {
+                  color: "rgb(177,177,177)",
+                },
+              },
+            ],
+          },
+        };
+
+        nengiengtroi = new GeoJSONLayer({
+          // nen gieng troi
+          //url: "https://localhost:44332/api/getcoordinates?id=39"
+          url: "39-Nen gieng troi.geojson",
+        });
+        nengiengtroi.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.2,
+                material: {
+                  color: "rgb(230,230,230)",
+                },
+              },
+            ],
+          },
+        };
+
+        kinhgiengtroi = new GeoJSONLayer({
+          // kinh gieng troi
+          //url: "https://localhost:44332/api/getcoordinates?id=40"
+          url: "40-Kinh gieng troi.geojson",
+        });
+        kinhgiengtroi.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.3,
+                material: {
+                  color: [75, 75, 75, 0.9],
+                },
+              },
+            ],
+          },
+        };
+
+        lancangiengtroi = new GeoJSONLayer({
+          // lan can gieng troi
+          //url: "https://localhost:44332/api/getcoordinates?id=41"
+          url: "41-Lan can gieng troi.geojson",
+        });
+        lancangiengtroi.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.5,
+                material: {
+                  color: "rgb(140,140,140)",
+                },
+              },
+            ],
+          },
+        };
+        maibancongmattruoc = new GeoJSONLayer({
+          // mai ban cong mat truoc
+          //url: "https://localhost:44332/api/getcoordinates?id=42"
+          url: "42-Mai ban cong mat truoc.geojson",
+        });
+        maibancongmattruoc.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 1,
+                material: {
+                  color: "rgb(156,156,156)",
+                },
+              },
+            ],
+          },
+        };
+        cotphancach = new GeoJSONLayer({
+          // cot phan cach
+          //url: "https://localhost:44332/api/getcoordinates?id=43"
+          url: "43-Cot phan cach.geojson",
+        });
+        cotphancach.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 5,
+                material: {
+                  color: "rgb(140,140,140)",
+                },
+              },
+            ],
+          },
+        };
+        door = new GeoJSONLayer({
+          // cua ra vao 2 mat trai phai
+          //url: "https://localhost:44332/api/getcoordinates?id=44"
+          url: "44-Cua ra vao.geojson",
+        });
+        door.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 5,
+                material: {
+                  color: [75, 75, 75, 0.9],
+                },
+              },
+            ],
+          },
+        };
+        bloclAboveDoor = new GeoJSONLayer({
+          // block phia tren cua trai phai
+          //url: "https://localhost:44332/api/getcoordinates?id=45"
+          url: "45-Block phia tren cua.geojson",
+        });
+        bloclAboveDoor.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 1.5,
+                material: {
+                  color: "rgb(140,140,140)",
+                },
+              },
+            ],
+          },
+        };
+        blockphiatren = new GeoJSONLayer({
+          // block phia tren cua trai phai
+          //url: "https://localhost:44332/api/getcoordinates?id=46"
+          url: "46-Cua kinh ban cong tang 2.geojson",
+        });
+        blockphiatren.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 5,
+                material: {
+                  color: [75, 75, 75, 0.9],
+                },
+              },
+            ],
+          },
+        };
+        cotthanhtang2phiasau = new GeoJSONLayer({
+          // cotthanhtang2phiasau
+          //url: "https://localhost:44332/api/getcoordinates?id=47"
+          url: "47-Cot thanh tang 2 phia sau.geojson",
+        });
+        cotthanhtang2phiasau.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 10,
+                material: {
+                  color: "rgb(130 ,130 ,130)",
+                },
+              },
+            ],
+          },
+        };
+        hangraolancantang2 = new GeoJSONLayer({
+          // hangraolancantang2
+          //url: "https://localhost:44332/api/getcoordinates?id=48"
+          url: "48-Hang rao lan can tang 2.geojson",
+        });
+        hangraolancantang2.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 10,
+                material: {
+                  color: "rgb(170,170,170)",
+                },
+              },
+            ],
+          },
+        };
+        maisau = new GeoJSONLayer({
+          // mai sau
+          //url: "https://localhost:44332/api/getcoordinates?id=49"
+          url: "49-Mai sau.geojson",
+        });
+        maisau.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 0.5,
+                material: {
+                  color: "rgb(170,170,170)",
+                },
+              },
+            ],
+          },
+        };
+        cuakinhbancongmattruoc = new GeoJSONLayer({
+          // cuakinhbancongmattruoc
+          //url: "https://localhost:44332/api/getcoordinates?id=50"
+          url: "50-Cua kinh ban cong mat truoc.geojson",
+        });
+        cuakinhbancongmattruoc.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 7,
+                material: {
+                  color: [75, 75, 75, 0.9],
+                },
+              },
+            ],
+          },
+        };
+        cotthanhbancongmattruoc = new GeoJSONLayer({
+          // cotthanhbancongmattruoc
+          //url: "https://localhost:44332/api/getcoordinates?id=51"
+          url: "51-Cot thanh ban cong mat truoc.geojson",
+        });
+        cotthanhbancongmattruoc.renderer = {
+          type: "simple",
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [
+              {
+                type: "extrude",
+                size: 12.35,
+                material: {
+                  color: "rgb(130 ,130 ,130)",
+                },
+              },
+            ],
+          },
+        };
+        const map = new Map({
+          basemap: "topo-vector",
+          ground: "world-elevation",
+          layers: [
+            floorLayer,
+            stairLayer,
+            groundFloorLayer,
+            groundFloorWallLayer,
+            floorBorderLayer,
+            banisterLayer,
+            thinColumnLayer,
+            thickColumnLayer,
+            doorLayer,
+            secondFloorLayer,
+            groundFloorBorderLayer,
+            canopyLayer,
+            balconyLayer,
+            banisterOfBalconyLayer,
+            thinColSecondFloorLayer,
+            windowGroundFloorLayer,
+            windowCoverLayer,
+            windowGlassAboveLayer,
+            windowGlassBelowLayer,
+            windowBasementLayer,
+            atticLayer,
+            atticGlassLayer,
+            frontTerrace,
+            groundFrontTerrace,
+            terrace1,
+            groundTerrace1,
+            groundBalconyTerrace,
+            rooftopAttic,
+            terraceGuard,
+            middleTerraceRoof,
+            kinhgacsanthuong,
+            cotgacsanthuong,
+            terrace2,
+            lancansanthuongsau,
+            viensanthuongnuasau,
+            gacsanthuongsau,
+            maigacsanthuongsau,
+            nengiengtroi,
+            kinhgiengtroi,
+            lancangiengtroi,
+            maibancongmattruoc,
+            cotphancach,
+            door,
+            bloclAboveDoor,
+            blockphiatren,
+            cotthanhtang2phiasau,
+            hangraolancantang2,
+            maisau,
+            cuakinhbancongmattruoc,
+            cotthanhbancongmattruoc,
+          ], // end layers
+        });
+
+        const view = new SceneView({
+          container: "viewDiv",
+          map: map,
+          camera: {
+            position: [106.69605223998242, 10.777448467150217, 0],
+            heading: 0,
+            tilt: 0,
+          },
+        });
+
+        view.popup.defaultPopupTemplateEnabled = true;
+      });
+    </script>
+  </head>
+
+  <body>
+    <header id="mu-hero" class="" role="banner">
+      <!-- Start menu  -->
+      <nav
+        class="navbar navbar-fixed-top navbar-default mu-navbar"
+        style="top: 0px !important"
+      >
+        <div class="container"></div>
+      </nav>
+      <!-- End menu -->
+
+      <div class="mu-hero-overlay">
+        <div class="container">
+          <div class="mu-hero-area"></div>
+        </div>
+      </div>
+    </header>
+    <!-- End Header -->
+    <div id="viewDiv" style="margin-top: 60px"></div>
+  </body>
+</html>
